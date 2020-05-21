@@ -5,6 +5,8 @@ import {LanguageService} from "../services/language.service";
 
 import { MongooseDocument } from "mongoose";
 
+import {ObjectID} from 'mongodb';
+
 
 class CategoryHelpers{
 
@@ -53,7 +55,26 @@ export class CategoryService extends CategoryHelpers{
         })
 
     }
-
+    public async getObtenerCategory(req: Request, res: Response){        
+        Category.aggregate([
+         {$match :{_id : new ObjectID(req.params.id)}}
+         ,
+           { 
+             "$lookup":{
+             from: "languages",
+             localField: "_id",
+             foreignField:"category",
+             as:"1"
+           }
+        }
+        ]), (err:Error, data: any)=> {
+            if (err){
+                res.status(401).send(err);
+            }else{
+                res.status(200).json(data[0]);
+            }
+            }
+    }
     public async NewOne(req: Request, res: Response){        
         const c = new Category(req.body);
         const old_cat:any = await super.GetCategory({name:c.name});
